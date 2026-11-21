@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Token Launch Radar — radar-5</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Header & Integrity Strip -->
+    <header class="header">
+      <div class="header-top">
+        <div class="logo-area">
+          <div class="radar-ping"></div>
+          <h1>TOKEN LAUNCH RADAR</h1>
+          <span class="badge model-badge">radar-5</span>
+        </div>
+        <div class="header-stats" id="integrityStrip">
+          <!-- Populated by app.js at runtime -->
+        </div>
+      </div>
+      <!-- Formula Strip & Live Sandbox -->
+      <div class="formula-strip">
+        <div class="formula-text">
+          <strong>Expected Value</strong> = Curve(TVL) × Growth(7d) × Maturity(age) × Breadth × P(token)
+          <span id="sandboxNotice" style="display:none; color:var(--accent-amber); font-size:11px; margin-left:8px;">sandbox modified — Reset to restore model values</span>
+        </div>
+        <div class="sandbox-controls">
+          <label>Growth Wt: <input type="range" id="sliderGrowth" min="0" max="2" step="0.1" value="0.6"> <span id="valGrowth">0.6</span></label>
+          <label>Maturity Floor: <input type="range" id="sliderMaturity" min="0.1" max="1" step="0.05" value="0.55"> <span id="valMaturity">0.55</span></label>
+          <button id="resetSandbox" class="subtle-btn">Reset</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+      <button class="tab-btn active" data-tab="pre-token">Pre-Token Board (<span id="countPre">198</span>)</button>
+      <button class="tab-btn" data-tab="live">Live Tokens (<span id="countLive">24</span>)</button>
+      <button class="tab-btn" data-tab="non-candidates">Not Launch Candidates (<span id="countNon">144</span>)</button>
+      <button class="tab-btn" data-tab="method">Method & OOS Validation</button>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filters-bar" id="filtersBar">
+      <input type="text" id="searchInput" placeholder="Search protocol, category, chain..." autocomplete="off">
+      <select id="categorySelect">
+        <option value="">All Categories</option>
+      </select>
+      <select id="chainSelect">
+        <option value="">All Chains</option>
+      </select>
+      <select id="verdictSelect">
+        <option value="">All Verdicts</option>
+        <option value="FARM">FARM</option>
+        <option value="WATCH">WATCH</option>
+        <option value="SKIP">SKIP</option>
+      </select>
+      <button id="resetFilters" class="subtle-btn">Reset Filters</button>
+    </div>
+
+    <!-- Main Content Panels -->
+    <main class="main-content">
+      <!-- 1. Pre-Token Board Panel -->
+      <div id="panelPreToken" class="panel active">
+        <div class="table-container">
+          <table class="radar-table" id="boardTable">
+            <thead>
+              <tr>
+                <th class="sortable" data-sort="rank">Rank ↕</th>
+                <th class="sortable" data-sort="name">Protocol ↕</th>
+                <th class="sortable" data-sort="category">Category ↕</th>
+                <th class="sortable" data-sort="tvl_usd">TVL ($) ↕</th>
+                <th class="sortable" data-sort="change_7d">7d (%) ↕</th>
+                <th class="sortable" data-sort="age_days">Age (d) ↕</th>
+                <th class="sortable" data-sort="model.curve_base">Curve $ ↕</th>
+                <th class="sortable" data-sort="p_token">P(token) ↕</th>
+                <th class="sortable" data-sort="implied_value_usd">Expected $ ↕</th>
+                <th class="sortable" data-sort="net_farm_usd">Net $ ↕</th>
+                <th class="sortable" data-sort="verdict">Verdict ↕</th>
+                <th>Candidate</th>
+              </tr>
+            </thead>
+            <tbody id="boardTbody">
+              <!-- Populated by app.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 2. Live Tokens Panel -->
+      <div id="panelLive" class="panel">
+        <div class="panel-note" id="liveNote">Top 24 live tokens by market cap (392 more recorded tokens not shown).</div>
+        <div class="table-container">
+          <table class="radar-table" id="liveTable">
+            <thead>
+              <tr>
+                <th>Protocol</th>
+                <th>Category</th>
+                <th>Chains</th>
+                <th>TVL ($)</th>
+                <th>Market Cap ($)</th>
+                <th>Implied / Actual Ratio</th>
+              </tr>
+            </thead>
+            <tbody id="liveTbody">
+              <!-- Populated by app.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 3. Non-Candidates Panel -->
+      <div id="panelNonCandidates" class="panel">
+        <div class="panel-note">144 pre-token protocols excluded from ranked board per watchlist eligibility rules (bridges, liquid staking, CEX, wrapped/staked, versioned).</div>
+        <div class="table-container">
+          <table class="radar-table" id="nonCandidateTable">
+            <thead>
+              <tr>
+                <th>Protocol</th>
+                <th>Category</th>
+                <th>TVL ($)</th>
+                <th>Curve $</th>
+                <th>Exclusion Reason</th>
+              </tr>
+            </thead>
+            <tbody id="nonCandidateTbody">
+              <!-- Populated by app.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 4. Method & OOS Validation Panel (Below Board) -->
+      <div id="panelMethod" class="panel">
+        <div class="method-section">
+          <h3>Out-of-Sample Blind Validation (3 Models × Splits)</h3>
+          <p class="method-desc" id="priorsAblationText">Rigorously tested against held-out protocols. Radar-5 size curve model with priors evaluation.</p>
+          <div class="table-container">
+            <table class="radar-table">
+              <thead>
+                <tr>
+                  <th>Split & Model</th>
+                  <th>Median ×Err</th>
+                  <th>Mean LogErr</th>
+                  <th>P90 LogErr</th>
+                  <th>R²</th>
+                  <th>n</th>
+                </tr>
+              </thead>
+              <tbody id="oosTbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="method-grid">
+          <div class="method-col">
+            <h3>Size Curve (Log-Log Market Cap vs TVL)</h3>
+            <p class="method-desc">Scatter of 128 traded comps only (held-out points highlighted), fitted curve line + p10–p90 uncertainty band.</p>
+            <div class="chart-container" id="svgContainer"></div>
+          </div>
+          <div class="method-col">
+            <h3>Category Intercept Calibration</h3>
+            <div class="table-container" style="max-height: 280px; overflow-y: auto;">
+              <table class="radar-table">
+                <thead>
+                  <tr>
+                    <th>Category</th>
+                    <th>Comps (n)</th>
+                    <th>Shift (dex)</th>
+                    <th>Top Comps</th>
+                  </tr>
+                </thead>
+                <tbody id="calibrationTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="method-grid">
+          <div class="method-col">
+            <h3>P(token) Estimator Buckets</h3>
+            <div class="table-container" style="max-height: 260px; overflow-y: auto;">
+              <table class="radar-table">
+                <thead>
+                  <tr>
+                    <th>Age Band</th>
+                    <th>TVL Band</th>
+                    <th>Total (n)</th>
+                    <th>Tokens</th>
+                    <th>P(raw)</th>
+                    <th>P(shrunk)</th>
+                  </tr>
+                </thead>
+                <tbody id="pTokenTbody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="method-col">
+            <h3>Assumptions & Parameters</h3>
+            <div class="constants-box">
+              <div><strong>Model Version:</strong> radar-5</div>
+              <div><strong>Size Curve Fit:</strong> OLS on log10(TVL) vs log10(mcap) with category median residual shifts (clamp ±0.30 dex).</div>
+              <div><strong>Priors Shrinkage:</strong> Bayesian shrinkage m=20 to global prior rate.</div>
+              <div><strong>Farm Economics:</strong> Gas cost per chain table + 5% annual opportunity cost. P(qualify) = 0.5, Farmer FDV = 5%.</div>
+              <div><strong>Verdicts:</strong> FARM (net ≥ $100 & P(token) ≥ 0.30), WATCH (net ≥ $0), SKIP (net < $0).</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Detail Drawer Overlay -->
+    <div id="detailOverlay" class="drawer-overlay">
+      <div class="drawer" id="drawerContent">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer" id="footerInfo">
+      <!-- Populated by app.js -->
+    </footer>
+  </div>
+
+  <script src="../data.js" onerror="this.onerror=null;this.src='data.js';"></script>
+  <script src="app.js"></script>
+</body>
+</html>
